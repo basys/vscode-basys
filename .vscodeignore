@@ -1,0 +1,5 @@
+.vscode/**
+.gitignore
+.eslintrc.json
+jsconfig.json
+to-be-used.js

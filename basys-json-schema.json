@@ -1,0 +1,108 @@
+{
+  "title": "Basys configuration",
+  "type": "object",
+  "properties": {
+    "apps": {
+      "type": "object",
+      "description": "Apps included in the project",
+      "patternProperties": {
+        "^[\\w\\-]+$": {
+          // BUG: in description specify which names are allowed
+          "description": "Name of the app",
+          "$ref": "#/definitions/app-schema"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "apps"
+  ],
+  "definitions": {
+    "app-schema": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "App type. Available options: 'web', 'mobile', 'desktop'.",
+          "enum": [
+            "web",
+            "mobile",
+            "desktop"
+          ]
+        },
+        "entry": {
+          "type": "string",
+          "description": "Optional entry for UI Vue application (relative to src/ directory), e.g. 'frontend.js'."
+          // BUG: should end with .js if not empty
+        },
+        "backendEntry": {
+          "type": "string",
+          "description": "Optional entry to customize Express application (relative to src/ directory), e.g. 'backend.js'. For web apps only."
+          // BUG: should end with .js if not empty
+        },
+        "styles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "A list of paths to stylesheet files, that are preprocessed, bundled and loaded on all pages. CSS, LESS and SASS files are supported."
+        },
+        "favicon": {
+          "type": "string",
+          "description": "Optional path to favicon file relative to the project root."
+        },
+        "browsers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "A list of browsers that will be supported by the web app. This option is used when bundling JavaScript and CSS and replaces all unsupported features with polyfills. It uses the browserlist format. For web apps only."
+        },
+        "nodeVersion": {
+          "type": "number",
+          "description": "A minimum version of Node.js supported by the backend code. For web and desktop apps only."
+        },
+        "host": {
+          "type": "string",
+          "description": "Host used for serving web app and dev server."
+        },
+        "port": {
+          "type": "integer",
+          "description": "Port used for serving web app. If this port is occupied an empty port will be automatically detected and used."
+        },
+        "backendPort": {
+          "type": "integer",
+          "description": "Port used by dev server for web app backend. If this port is occupied an empty port will be automatically detected and used."
+        },
+        "testBrowsers": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "chromium",
+              "chrome",
+              "chrome:headless",
+              "chrome-canary",
+              "ie",
+              "edge",
+              "firefox",
+              "firefox:headless",
+              "opera",
+              "safari"
+            ]
+          },
+          "description": "A list of browsers that are used for end-to-end testing"
+        },
+        "custom": {
+          "type": "object",
+          "description": "A JSON object that contains custom app-specific configuration, that can be accessed in the backend code using the global basys.config object."
+        }
+        // BUG: 'dev', 'test', 'prod' envs, they should be validated similarly (but no env nesting)
+      },
+      "required": [
+        "type"
+      ]
+    }
+  }
+}
