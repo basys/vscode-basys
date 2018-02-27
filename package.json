@@ -3,7 +3,7 @@
     "displayName": "Basys",
     "description": "IDE for building Basys projects",
     "version": "0.1.0",
-    "publisher": "basys-app",
+    "publisher": "basys",
     "engines": {
         "vscode": "^1.18.0"
     },
