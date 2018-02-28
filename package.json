@@ -74,6 +74,7 @@
         "onCommand:basys.createProject"
     ],
     "scripts": {
+        "lint": "eslint .",
         "postinstall": "node ./node_modules/vscode/bin/install"
     },
     "dependencies": {
@@ -84,8 +85,9 @@
         "vscode-languageserver": "^3.5.0"
     },
     "devDependencies": {
-        "vscode": "^1.1.10",
-        "eslint": "^4.18.0"
+        "eslint": "^4.18.1",
+        "eslint-config-basys": "~0.3.0",
+        "vscode": "^1.1.10"
     },
     "extensionDependencies": [
         "dbaeumer.vscode-eslint",

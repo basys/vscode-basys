@@ -11,7 +11,7 @@ function validate(document) {
     syntax: document.languageId !== 'css' ? document.languageId : undefined,
   };
   return lint(options)
-    .catch(function(err) {
+    .catch(err => {
       if (
         err.message.startsWith('No configuration provided for') ||
         /No rules found within configuration/.test(err.message)
@@ -76,10 +76,12 @@ connection.onDidChangeConfiguration(() => validateAll());
 connection.onDidChangeWatchedFiles(() => validateAll());
 
 documents.onDidChangeContent(event => validate(event.document));
-documents.onDidClose(event => connection.sendDiagnostics({
-  uri: event.document.uri,
-  diagnostics: [],
-}));
+documents.onDidClose(event =>
+  connection.sendDiagnostics({
+    uri: event.document.uri,
+    diagnostics: [],
+  }),
+);
 documents.listen(connection);
 
 connection.listen();

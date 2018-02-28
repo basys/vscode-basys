@@ -1,6 +1,15 @@
 const fs = require('fs');
 const path = require('path');
-const {commands, languages, window, workspace, Range, RelativePattern, TextEdit, Uri} = require('vscode');
+const {
+  commands,
+  languages,
+  window,
+  workspace,
+  Range,
+  RelativePattern,
+  TextEdit,
+  Uri,
+} = require('vscode');
 const {LanguageClient} = require('vscode-languageclient');
 
 let terminal = null;
@@ -32,30 +41,35 @@ class PrettierEditProvider {
 
 exports.activate = async function(context) {
   // Create project command
-  context.subscriptions.push(commands.registerCommand('basys.createProject', async () => {
-    const template = await window.showQuickPick(
-      [
-        {label: 'Blank project', value: 'basys/basys-starter-project'},
-        {label: 'Todo list sample web app', value: 'basys/basys-todomvc'},
-      ],
-      {
-        ignoreFocusOut: true,
-        placeHolder: 'Select a starter project',
-      }
-    );
-    if (!template) return;
+  context.subscriptions.push(
+    commands.registerCommand('basys.createProject', async () => {
+      const template = await window.showQuickPick(
+        [
+          {label: 'Blank project', value: 'basys/basys-starter-project'},
+          {label: 'Todo list sample web app', value: 'basys/basys-todomvc'},
+        ],
+        {
+          ignoreFocusOut: true,
+          placeHolder: 'Select a starter project',
+        },
+      );
+      if (!template) return;
 
-    const dirObj = await window.showOpenDialog({
+      const dirObj = await window.showOpenDialog({
         canSelectFiles: false,
         canSelectFolders: true,
         canSelectMany: false,
         openLabel: 'Select folder',
-    });
-    if (!dirObj || !dirObj[0]) return;
+      });
+      if (!dirObj || !dirObj[0]) return;
 
-    await require('basys-cli/utils').initProject({name: template.value, dest: dirObj[0].path, vscode: true}, false);
-    await commands.executeCommand('vscode.openFolder', Uri.parse(dirObj[0].path));
-  }));
+      await require('basys-cli/utils').initProject(
+        {name: template.value, dest: dirObj[0].path, vscode: true},
+        false,
+      );
+      await commands.executeCommand('vscode.openFolder', Uri.parse(dirObj[0].path));
+    }),
+  );
 
   let basysFolder;
   for (const wf of workspace.workspaceFolders || []) {
@@ -67,13 +81,14 @@ exports.activate = async function(context) {
   if (!basysFolder) return;
 
   // Project overview page
-  context.subscriptions.push(workspace.registerTextDocumentContentProvider('basys', {
-    provideTextDocumentContent(uri) {
-      if (uri.authority === 'overview') {
-        // BUG: add styles, move them to a separate file
-        // BUG: show a link to the website+docs, logo
-        // BUG: show project title extracted from package.json?
-        return `
+  context.subscriptions.push(
+    workspace.registerTextDocumentContentProvider('basys', {
+      provideTextDocumentContent(uri) {
+        if (uri.authority === 'overview') {
+          // BUG: add styles, move them to a separate file
+          // BUG: show a link to the website+docs, logo
+          // BUG: show project title extracted from package.json?
+          return `
         <style></style>
         <body>
           <h1 class="caption">Welcome to Basys!</h1>
@@ -81,17 +96,27 @@ exports.activate = async function(context) {
           <br>
           <a href="http://basys.io/docs/configuration">See documentation</a>
         </body>`;
-      }
-    },
-  }));
+        }
+      },
+    }),
+  );
 
-  context.subscriptions.push(commands.registerCommand('basys.overview', () => {
-    return commands.executeCommand('vscode.previewHtml', Uri.parse('basys://overview'), 1, 'Basys: Project overview');
-  }));
+  context.subscriptions.push(
+    commands.registerCommand('basys.overview', () =>
+      commands.executeCommand(
+        'vscode.previewHtml',
+        Uri.parse('basys://overview'),
+        1,
+        'Basys: Project overview',
+      ),
+    ),
+  );
 
-  context.subscriptions.push(commands.registerCommand('basys.configure', () => {
-    window.showTextDocument(Uri.file(path.join(basysFolder, 'basys.json')));
-  }));
+  context.subscriptions.push(
+    commands.registerCommand('basys.configure', () => {
+      window.showTextDocument(Uri.file(path.join(basysFolder, 'basys.json')));
+    }),
+  );
 
   if (!terminal) terminal = window.createTerminal('basys');
   terminal.show();
@@ -128,9 +153,11 @@ exports.activate = async function(context) {
       documentSelector: ['css', 'less', 'scss'],
       synchronize: {
         configurationSection: 'stylelint',
-        fileEvents: workspace.createFileSystemWatcher('{.stylelintrc{,.js,.json},stylelint.config.js}'),
+        fileEvents: workspace.createFileSystemWatcher(
+          '{.stylelintrc{,.js,.json},stylelint.config.js}',
+        ),
       },
-    }
+    },
   );
   context.subscriptions.push(client.start());
 
@@ -140,10 +167,16 @@ exports.activate = async function(context) {
   for (const lang of ['css', 'less', 'scss']) {
     languageSelector.push({language: lang, scheme: 'untitled'});
     for (const workspaceFolder of workspace.workspaceFolders || []) {
-      languageSelector.push({language: lang, pattern: new RelativePattern(workspaceFolder, 'assets/**/*.{css,less,scss}')});
+      languageSelector.push({
+        language: lang,
+        pattern: new RelativePattern(workspaceFolder, 'assets/**/*.{css,less,scss}'),
+      });
     }
   }
-  let formatterHandler = languages.registerDocumentFormattingEditProvider(languageSelector, editProvider);
+  let formatterHandler = languages.registerDocumentFormattingEditProvider(
+    languageSelector,
+    editProvider,
+  );
   context.subscriptions.push({
     dispose() {
       if (formatterHandler) formatterHandler.dispose();
