@@ -118,7 +118,7 @@ exports.activate = async function(context) {
       if (!dirObj || !dirObj[0]) return;
 
       await require('basys-cli/utils').initProject(
-        {name: template.value, dest: dirObj[0].path, vscode: true},
+        {name: template.value, dest: dirObj[0].fsPath, vscode: true},
         false,
       );
       await commands.executeCommand('vscode.openFolder', Uri.parse(dirObj[0].path));
@@ -127,8 +127,8 @@ exports.activate = async function(context) {
 
   let projectDir;
   for (const wf of workspace.workspaceFolders || []) {
-    if (fs.existsSync(path.join(wf.uri.path, 'basys.json'))) {
-      projectDir = wf.uri.path;
+    if (fs.existsSync(path.join(wf.uri.fsPath, 'basys.json'))) {
+      projectDir = wf.uri.fsPath;
       break;
     }
   }
