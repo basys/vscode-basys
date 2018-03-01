@@ -1,10 +1,17 @@
-const {lint} = require('stylelint');
+const path = require('path');
 const {createConnection, Files, TextDocuments} = require('vscode-languageserver');
 
 const connection = createConnection(process.stdin, process.stdout);
 const documents = new TextDocuments();
 
+let lint;
+
 function validate(document) {
+  if (!lint) {
+    connection.sendDiagnostics({uri: document.uri, diagnostics: []});
+    return;
+  }
+
   const options = {
     code: document.getText(),
     codeFilename: Files.uriToFilePath(document.uri),
@@ -38,7 +45,6 @@ function validate(document) {
         };
         return {
           message: warning.text,
-          // https://github.com/Microsoft/vscode-languageserver-node/blob/v2.6.2/types/src/main.ts#L130-L147
           severity: warning.severity === 'warning' ? 2 : 1,
           source: 'stylelint',
           range: {
@@ -50,7 +56,7 @@ function validate(document) {
       connection.sendDiagnostics({uri: document.uri, diagnostics});
     })
     .catch(err => {
-      // https://github.com/stylelint/stylelint/blob/8.4.0/lib/utils/configurationError.js#L9
+      // https://github.com/stylelint/stylelint/blob/master/lib/utils/configurationError.js
       if (err.code === 78) {
         connection.window.showErrorMessage(`stylelint: ${err.message}`);
         return;
@@ -64,7 +70,19 @@ function validateAll() {
   return Promise.all(documents.all().map(document => validate(document)));
 }
 
+function updateStylelint() {
+  const stylelintPath = path.join(process.cwd(), 'node_modules', 'stylelint', 'lib', 'index.js');
+  delete require.cache[stylelintPath];
+  try {
+    lint = require(stylelintPath).lint;
+  } catch (e) {
+    lint = null;
+    connection.console.log('stylelint npm module is not available');
+  }
+}
+
 connection.onInitialize(() => {
+  updateStylelint();
   validateAll();
   return {
     capabilities: {
@@ -73,7 +91,12 @@ connection.onInitialize(() => {
   };
 });
 connection.onDidChangeConfiguration(() => validateAll());
-connection.onDidChangeWatchedFiles(() => validateAll());
+connection.onDidChangeWatchedFiles(_change => {
+  if (_change.changes[0] && _change.changes[0].uri === 'stylelint') {
+    updateStylelint();
+  }
+  validateAll();
+});
 
 documents.onDidChangeContent(event => validate(event.document));
 documents.onDidClose(event =>

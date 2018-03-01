@@ -15,15 +15,22 @@ const {LanguageClient} = require('vscode-languageclient');
 let terminal = null;
 
 class PrettierEditProvider {
+  constructor(projectDir) {
+    this.projectDir = projectDir;
+  }
+
   provideDocumentFormattingEdits(document) {
     // BUG: use document.fileName to calculate it (use .stylelintignore)
     const fileIsIgnored = false;
     if (!document.isUntitled && fileIsIgnored) return;
     if (!['css', 'less', 'scss'].includes(document.languageId)) return;
 
+    const prettierPath = path.join(this.projectDir, 'node_modules', 'prettier');
+    if (!fs.existsSync(prettierPath)) return;
+
     let text;
     try {
-      text = require('prettier').format(document.getText(), {
+      text = require(prettierPath).format(document.getText(), {
         printWidth: 100,
         tabWidth: 2,
         filepath: document.fileName,
@@ -37,6 +44,53 @@ class PrettierEditProvider {
     const range = new Range(0, 0, lastLineId, document.lineAt(lastLineId).text.length);
     return [TextEdit.replace(range, text)];
   }
+}
+
+function startStylelintServer(projectDir) {
+  const fsWatcher = workspace.createFileSystemWatcher(
+    path.join(projectDir, '{.stylelintrc,.stylelintrc.js,.stylelintrc.json,.stylelint.config.js}'),
+  );
+
+  // When stylelint npm package is changed notify the language server to reload it.
+  // createFileSystemWatcher() ignores files inside node_modules.
+  fs.watchFile(
+    path.join(projectDir, 'node_modules', 'stylelint', 'lib', 'index.js'),
+    (curr, prev) => {
+      if (curr.mtime !== prev.mtime) {
+        fsWatcher._onDidChange.fire('stylelint');
+      }
+    },
+  );
+
+  const serverPath = path.join(__dirname, 'stylelint-server.js');
+  const client = new LanguageClient(
+    'stylelint',
+    'Stylelint Server',
+    {
+      run: {
+        module: serverPath,
+        options: {
+          cwd: projectDir,
+        },
+      },
+      debug: {
+        module: serverPath,
+        options: {
+          cwd: projectDir,
+          execArgv: ['--nolazy', '--debug=6004'],
+        },
+      },
+    },
+    {
+      // BUG: also format unsaved files?
+      documentSelector: ['css', 'less', 'scss'],
+      synchronize: {
+        configurationSection: 'stylelint',
+        fileEvents: fsWatcher,
+      },
+    },
+  );
+  return client.start();
 }
 
 exports.activate = async function(context) {
@@ -71,14 +125,14 @@ exports.activate = async function(context) {
     }),
   );
 
-  let basysFolder;
+  let projectDir;
   for (const wf of workspace.workspaceFolders || []) {
     if (fs.existsSync(path.join(wf.uri.path, 'basys.json'))) {
-      basysFolder = wf.uri.path;
+      projectDir = wf.uri.path;
       break;
     }
   }
-  if (!basysFolder) return;
+  if (!projectDir) return;
 
   // Project overview page
   context.subscriptions.push(
@@ -114,15 +168,15 @@ exports.activate = async function(context) {
 
   context.subscriptions.push(
     commands.registerCommand('basys.configure', () => {
-      window.showTextDocument(Uri.file(path.join(basysFolder, 'basys.json')));
+      window.showTextDocument(Uri.file(path.join(projectDir, 'basys.json')));
     }),
   );
 
   if (!terminal) terminal = window.createTerminal('basys');
   terminal.show();
-  terminal.sendText(`cd "${basysFolder.replace(/\\/g, '\\\\')}"`); // Replace single backslash with double backslash
+  terminal.sendText(`cd "${projectDir.replace(/\\/g, '\\\\')}"`); // Replace single backslash with double backslash
 
-  const isNewProject = !fs.existsSync(path.join(basysFolder, 'node_modules'));
+  const isNewProject = !fs.existsSync(path.join(projectDir, 'node_modules'));
   if (isNewProject) {
     await commands.executeCommand('basys.overview');
     terminal.sendText('npm install');
@@ -133,36 +187,10 @@ exports.activate = async function(context) {
   // BUG: launch the dev server and show a notification (only after npm install is finished if `isNewProject`)
   terminal.sendText(`${path.join('node_modules', '.bin', 'basys')} dev`);
 
-  // Style linting
-  const serverPath = path.join(__dirname, 'stylelint-server.js');
-  const client = new LanguageClient(
-    'stylelint',
-    {
-      run: {
-        module: serverPath,
-      },
-      debug: {
-        module: serverPath,
-        options: {
-          execArgv: ['--nolazy', '--debug=6004'],
-        },
-      },
-    },
-    {
-      // BUG: also format unsaved files
-      documentSelector: ['css', 'less', 'scss'],
-      synchronize: {
-        configurationSection: 'stylelint',
-        fileEvents: workspace.createFileSystemWatcher(
-          '{.stylelintrc{,.js,.json},stylelint.config.js}',
-        ),
-      },
-    },
-  );
-  context.subscriptions.push(client.start());
+  context.subscriptions.push(startStylelintServer(projectDir));
 
-  // Style formatting
-  const editProvider = new PrettierEditProvider();
+  // Implement "Format document" command for styles
+  const editProvider = new PrettierEditProvider(projectDir);
   const languageSelector = [];
   for (const lang of ['css', 'less', 'scss']) {
     languageSelector.push({language: lang, scheme: 'untitled'});
