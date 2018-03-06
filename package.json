@@ -2,7 +2,7 @@
     "name": "vscode-basys",
     "displayName": "Basys",
     "description": "IDE for building Vue.js apps using Basys framework",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "publisher": "basys",
     "engines": {
         "vscode": "^1.18.0"
@@ -15,7 +15,7 @@
     "bugs": {
         "url": "https://github.com/basys/vscode-basys/issues"
     },
-    "homepage": "http://basys.io",
+    "homepage": "https://github.com/basys/basys",
     "categories": [
         "Other"
     ],
@@ -31,6 +31,7 @@
         "theme": "light"
     },
     "main": "./extension",
+    "aiKey": "4dc76198-a41f-474d-bb1e-db973f52170d",
     "contributes": {
         "commands": [
             {
@@ -78,15 +79,16 @@
         "postinstall": "node ./node_modules/vscode/bin/install"
     },
     "dependencies": {
-        "basys-cli": "~0.2.2",
-        "vscode-languageclient": "^3.5.0",
-        "vscode-languageserver": "^3.5.0"
+        "basys-cli": "0.3.1",
+        "vscode-extension-telemetry": "0.0.15",
+        "vscode-languageclient": "^4.0.0",
+        "vscode-languageserver": "^4.0.0"
     },
     "devDependencies": {
-        "eslint": "^4.18.1",
-        "eslint-config-basys": "~0.3.1",
+        "eslint": "^4.18.2",
+        "eslint-config-basys": "0.4.0",
         "prettier": "1.11.1",
-        "vscode": "^1.1.10"
+        "vscode": "^1.1.11"
     },
     "extensionDependencies": [
         "dbaeumer.vscode-eslint",

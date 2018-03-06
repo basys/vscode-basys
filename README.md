@@ -1,6 +1,6 @@
 # Basys IDE for VSCode
 
-[Basys](http://basys.io) is a full-stack Vue.js framework for cross-platform apps. This extension configures Visual Studio Code to improves the app development experience.
+[Basys](https://github.com/basys/basys) is a full-stack Vue.js framework for cross-platform apps. This extension aims to provide a great development experience inside Visual Studio Code.
 
 ## Features
 

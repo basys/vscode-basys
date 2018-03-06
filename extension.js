@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const {
   commands,
+  extensions,
   languages,
   window,
   workspace,
@@ -10,6 +11,7 @@ const {
   TextEdit,
   Uri,
 } = require('vscode');
+const TelemetryReporter = require('vscode-extension-telemetry').default;
 const {LanguageClient} = require('vscode-languageclient');
 
 let terminal = null;
@@ -94,9 +96,17 @@ function startStylelintServer(projectDir) {
 }
 
 exports.activate = async function(context) {
+  const packageInfo = require('./package.json');
+  const reporter = new TelemetryReporter('vscode-basys', packageInfo.version, packageInfo.aiKey);
+  context.subscriptions.push(reporter);
+
+  reporter.sendTelemetryEvent('activation');
+
   // Create project command
   context.subscriptions.push(
     commands.registerCommand('basys.createProject', async () => {
+      reporter.sendTelemetryEvent('create-project');
+
       const template = await window.showQuickPick(
         [
           {label: 'Blank project', value: 'basys/basys-starter-project'},
@@ -116,6 +126,8 @@ exports.activate = async function(context) {
         openLabel: 'Select folder',
       });
       if (!dirObj || !dirObj[0]) return;
+
+      reporter.sendTelemetryEvent('create-project-completed');
 
       await require('basys-cli/utils').initProject(
         {name: template.value, dest: dirObj[0].fsPath, vscode: true},
@@ -156,14 +168,16 @@ exports.activate = async function(context) {
   );
 
   context.subscriptions.push(
-    commands.registerCommand('basys.overview', () =>
+    commands.registerCommand('basys.overview', () => {
+      reporter.sendTelemetryEvent('project-overview');
+
       commands.executeCommand(
         'vscode.previewHtml',
         Uri.parse('basys://overview'),
         1,
         'Basys: Project overview',
-      ),
-    ),
+      );
+    }),
   );
 
   context.subscriptions.push(
@@ -180,6 +194,18 @@ exports.activate = async function(context) {
   if (isNewProject) {
     await commands.executeCommand('basys.overview');
     terminal.sendText('npm install');
+
+    // Activate Jest extension after `npm install` is finished
+    const jestExtension = extensions.getExtension('Orta.vscode-jest');
+    if (jestExtension && jestExtension.isActive) {
+      const packageLockPath = path.join(projectDir, 'package-lock.json');
+      fs.watchFile(packageLockPath, (curr, prev) => {
+        if (curr.size > 0) {
+          fs.unwatchFile(packageLockPath);
+          commands.executeCommand('io.orta.jest.start');
+        }
+      });
+    }
   }
 
   // BUG: `basys dev` should work in this console (even if global package is not installed)
