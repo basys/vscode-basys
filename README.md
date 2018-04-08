@@ -12,3 +12,7 @@
 ## Creating a new project
 
 Open the Command Palette and run `Basys: Create project` command. Select the starter template and an empty directory to use for the project. The extension will automatically scaffold the project, install npm packages and start the dev server.
+
+## Running the commands from sidebar explorer view
+
+![Sidebar view](assets/sidebar-view.gif)

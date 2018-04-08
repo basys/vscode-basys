@@ -48,6 +48,13 @@
           },
           "description": "A list of paths to stylesheet files, that are preprocessed, bundled and loaded on all pages. CSS, LESS and SASS files are supported."
         },
+        "overrides": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Allows to override javascript modules with custom code. Useful when a 3rd-party library bundled into the frontend code imports a large module, that is not actually needed. The key is a minimatch-like path and the value is a path to override module relative to the project root directory."
+        },
         "favicon": {
           "type": "string",
           "description": "Optional path to favicon file relative to the project root."

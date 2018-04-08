@@ -1,3 +1,7 @@
+## 0.2.0 (8 April 2018)
+
+* Explorer view in the sidebar for running Basys commands: starting/stopping dev server, running tests, etc.
+
 ## 0.1.2 (7 March 2018)
 
 * Support for unit testing with Jest
