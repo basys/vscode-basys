@@ -55,6 +55,10 @@
           },
           "description": "Allows to override javascript modules with custom code. Useful when a 3rd-party library bundled into the frontend code imports a large module, that is not actually needed. The key is a minimatch-like path and the value is a path to override module relative to the project root directory."
         },
+        "caseSensitive": {
+          "type": "boolean",
+          "description": "Defines whether to use case sensitive route matching."
+        },
         "favicon": {
           "type": "string",
           "description": "Optional path to favicon file relative to the project root."
@@ -65,6 +69,10 @@
             "type": "string"
           },
           "description": "A list of browsers that will be supported by the web app. This option is used when bundling JavaScript and CSS and replaces all unsupported features with polyfills. It uses the browserlist format. For web apps only."
+        },
+        "sourceMap": {
+          "type": "boolean",
+          "description": "Defines whether CSS and JavaScript source maps should be generated."
         },
         "nodeVersion": {
           "type": "number",
@@ -99,13 +107,24 @@
               "safari"
             ]
           },
-          "description": "A list of browsers that are used for end-to-end testing"
+          "description": "A list of browsers that are used for end-to-end testing."
         },
         "custom": {
           "type": "object",
           "description": "A JSON object that contains custom app-specific configuration, that can be accessed in the backend code using the global basys.config object."
+        },
+        "dev": {
+          "type": "object",
+          "description": "Allows to override option values when running the dev server."
+        },
+        "test": {
+          "type": "object",
+          "description": "Allows to override option values when running end-to-end tests."
+        },
+        "prod": {
+          "type": "object",
+          "description": "Allows to override option values when building the app for production."
         }
-        // BUG: 'dev', 'test', 'prod' envs, they should be validated similarly (but no env nesting)
       },
       "required": [
         "type"

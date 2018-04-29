@@ -2,7 +2,7 @@
     "name": "vscode-basys",
     "displayName": "Basys",
     "description": "IDE for building Vue.js apps using Basys framework",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "publisher": "basys",
     "engines": {
         "vscode": "^1.19.0"
@@ -109,15 +109,15 @@
     "dependencies": {
         "basys-cli": "0.3.1",
         "json5": "1.0.1",
-        "vscode-extension-telemetry": "0.0.15",
+        "vscode-extension-telemetry": "0.0.17",
         "vscode-languageclient": "^4.1.3",
-        "vscode-languageserver": "^4.1.1"
+        "vscode-languageserver": "4.1.2"
     },
     "devDependencies": {
         "eslint": "^4.19.1",
         "eslint-config-basys": "0.4.1",
-        "prettier": "1.11.1",
-        "vscode": "^1.1.14"
+        "prettier": "1.12.1",
+        "vscode": "1.1.16"
     },
     "extensionDependencies": [
         "dbaeumer.vscode-eslint",
