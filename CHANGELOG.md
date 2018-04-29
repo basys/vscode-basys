@@ -1,3 +1,7 @@
+## 0.2.1 (29 April 2018)
+
+* Update basys.json schema
+
 ## 0.2.0 (8 April 2018)
 
 * Explorer view in the sidebar for running Basys commands: starting/stopping dev server, running tests, etc.
