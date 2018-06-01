@@ -1,8 +1,8 @@
 {
     "name": "vscode-basys",
     "displayName": "Basys",
-    "description": "IDE for building Vue.js apps using Basys framework",
-    "version": "0.2.1",
+    "description": "IDE for building full-stack Vue.js apps",
+    "version": "0.2.2",
     "publisher": "basys",
     "engines": {
         "vscode": "^1.19.0"
