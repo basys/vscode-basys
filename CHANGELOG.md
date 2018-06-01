@@ -1,3 +1,7 @@
+## 0.2.2 (1 June 2018)
+
+* Logo update
+
 ## 0.2.1 (29 April 2018)
 
 * Update basys.json schema
