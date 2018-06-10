@@ -90,6 +90,11 @@ async function selectApp(appNames) {
   }
 }
 
+function isTask(task, name, appName = null) {
+  const def = task.definition;
+  return def.type === 'basys' && def.name === name && (!appName || def.appName === appName);
+}
+
 function taskCommands(project, reporter) {
   return [
     vscode.commands.registerCommand('basys.start-dev-server', async appName => {
@@ -100,10 +105,11 @@ function taskCommands(project, reporter) {
       }
 
       if (appName) {
-        vscode.commands.executeCommand(
-          'workbench.action.tasks.runTask',
-          `Basys: ${appName} app - start dev server`,
-        );
+        vscode.tasks.fetchTasks().then(tasks => {
+          vscode.tasks.executeTask(
+            tasks.filter(task => isTask(task, 'start-dev-server', appName))[0],
+          );
+        });
       }
     }),
 
@@ -115,11 +121,12 @@ function taskCommands(project, reporter) {
       }
 
       if (appName) {
-        // BUG: fix it
-        vscode.commands.executeCommand(
-          'workbench.action.tasks.terminate',
-          `Basys: ${appName} app - start dev server`,
-        );
+        const task = vscode.tasks.taskExecutions.filter(taskExec =>
+          isTask(taskExec.task, 'start-dev-server', appName),
+        )[0];
+        if (task) {
+          task.terminate();
+        }
       }
     }),
 
@@ -204,13 +211,19 @@ class BasysTreeDataProvider {
         const children = [];
 
         if (this.project.devServers[appName]) {
-          children.push({
-            label: 'Stop dev server',
-            command: {
-              command: 'basys.stop-dev-server',
-              arguments: [appName],
-            },
-          });
+          // Allow to stop dev server if it was started from VSCode
+          const task = vscode.tasks.taskExecutions.filter(taskExec =>
+            isTask(taskExec.task, 'start-dev-server', appName),
+          )[0];
+          if (task) {
+            children.push({
+              label: 'Stop dev server',
+              command: {
+                command: 'basys.stop-dev-server',
+                arguments: [appName],
+              },
+            });
+          }
 
           children.push({
             label: 'Open in browser',
