@@ -14,9 +14,11 @@ class Project {
     // Track dev-server.json files to have the status of dev servers running
     this.updateDevServer();
     for (const appName of this.appNames || []) {
-      fs.watchFile(path.join(this.dir, '.basys', appName, 'dev', 'dev-server.json'), () => {
-        this.updateDevServer();
-      });
+      fs.watchFile(
+        path.join(this.dir, '.basys', appName, 'dev', 'dev-server.json'),
+        {interval: 1000},
+        () => this.updateDevServer(),
+      );
     }
   }
 
