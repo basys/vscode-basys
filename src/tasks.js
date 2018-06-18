@@ -1,15 +1,16 @@
+const fs = require('fs');
 const path = require('path');
 const vscode = require('vscode');
 
 class BasysTaskProvider {
   constructor(project) {
-    this.appNames = project.appNames || [];
+    this.project = project;
   }
 
   provideTasks() {
-    const basysPath = path.join('node_modules', '.bin', 'basys');
+    const basysPath = path.join(this.project.dir, 'node_modules', '.bin', 'basys');
     const tasks = [];
-    for (const appName of this.appNames) {
+    for (const appName of this.project.appNames || []) {
       tasks.push(
         new vscode.Task(
           {type: 'basys', name: 'start-dev-server', appName},
@@ -239,22 +240,25 @@ class BasysTreeDataProvider {
           });
         }
 
-        children.push(
-          {
-            label: 'Build',
-            command: {
-              command: 'basys.build',
-              arguments: [appName],
-            },
+        children.push({
+          label: 'Build',
+          command: {
+            command: 'basys.build',
+            arguments: [appName],
           },
-          {
+        });
+
+        // Show item only if there are end-to-end tests
+        const e2eTestsDir = path.join(this.project.dir, 'tests', 'e2e');
+        if (fs.existsSync(e2eTestsDir) && fs.readdirSync(e2eTestsDir).length > 0) {
+          children.push({
             label: 'Run end-to-end tests',
             command: {
               command: 'basys.e2e-test',
               arguments: [appName],
             },
-          },
-        );
+          });
+        }
 
         return children;
       }
@@ -269,20 +273,23 @@ class BasysTreeDataProvider {
         });
       }
 
-      elements.push(
-        {
+      // Show item only if there are unit tests
+      const unitTestsDir = path.join(this.project.dir, 'tests', 'unit');
+      if (fs.existsSync(unitTestsDir) && fs.readdirSync(unitTestsDir).length > 0) {
+        elements.push({
           label: 'Run unit tests',
           command: {
             command: 'basys.unit-test',
           },
+        });
+      }
+
+      elements.push({
+        label: 'Lint',
+        command: {
+          command: 'basys.lint',
         },
-        {
-          label: 'Lint',
-          command: {
-            command: 'basys.lint',
-          },
-        },
-      );
+      });
 
       // BUG: command for starting app builder?
 
