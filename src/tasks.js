@@ -17,12 +17,9 @@ class BasysTaskProvider {
           vscode.workspace.WorkspaceFolder,
           `${appName} app - start dev server`,
           'Basys',
-          // BUG: pass cwd and other arguments (in all commands)
           new vscode.ShellExecution(`${basysPath} dev ${appName}`),
           [],
         ),
-        // BUG: task.presentationOptions = {panel: vscode.TaskPanelKind.Dedicated};
-        // BUG: provide task.isBackground?
 
         new vscode.Task(
           {type: 'basys', name: 'build', appName},
@@ -70,8 +67,8 @@ class BasysTaskProvider {
 
 async function selectApp(appNames) {
   if (!appNames) {
-    // BUG: a button for opening basys.json for editing
-    vscode.window.showWarningMessage("basys.json couldn't be parsed", {modal: true});
+    vscode.window.showErrorMessage("basys.json couldn't be parsed", {modal: true});
+    await vscode.commands.executeCommand('basys.open-config');
   } else if (appNames.length === 0) {
     // BUG: a button to run the command for creating a new app
     vscode.window.showWarningMessage('This project has no apps', {modal: true});
@@ -101,7 +98,8 @@ function findTaskExecution(name, appName = null) {
 async function executeTask(reporter, name, appName = null) {
   reporter.sendTelemetryEvent(name);
   const tasks = await vscode.tasks.fetchTasks();
-  return vscode.tasks.executeTask(tasks.filter(task => isTask(task, name, appName))[0]);
+  const task = tasks.filter(t => isTask(t, name, appName))[0];
+  await vscode.tasks.executeTask(task);
 }
 
 function taskCommands(project, treeDataProvider, reporter) {
@@ -137,7 +135,6 @@ function taskCommands(project, treeDataProvider, reporter) {
 
     vscode.commands.registerCommand('basys.build', async appName => {
       appName = appName || (await selectApp(project.appNames));
-      console.log('build', appName);
       if (appName) await executeTask(reporter, 'build', appName);
     }),
 

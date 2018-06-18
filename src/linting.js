@@ -45,6 +45,7 @@ function styleDocumentFormattingEditProvider(project) {
       languageSelector.push({
         language: lang,
         pattern: new vscode.RelativePattern(workspaceFolder, 'assets/**/*.{css,less,scss}'),
+        scheme: 'file',
       });
     }
   }
