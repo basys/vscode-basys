@@ -66,11 +66,13 @@ exports.activate = async function(context) {
     vscode.workspace.registerTaskProvider('basys', new BasysTaskProvider(project)),
   );
 
-  Array.prototype.push.apply(context.subscriptions, taskCommands(project, reporter));
-
-  const btdp = new BasysTreeDataProvider(project);
-  btdp.refresh();
-  context.subscriptions.push(vscode.window.registerTreeDataProvider('basys', btdp));
+  const treeDataProvider = new BasysTreeDataProvider(project);
+  Array.prototype.push.apply(
+    context.subscriptions,
+    taskCommands(project, treeDataProvider, reporter),
+  );
+  treeDataProvider.refresh();
+  context.subscriptions.push(vscode.window.registerTreeDataProvider('basys', treeDataProvider));
 
   // Project overview page
   context.subscriptions.push(

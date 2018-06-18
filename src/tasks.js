@@ -65,8 +65,6 @@ class BasysTaskProvider {
 
     return tasks;
   }
-
-  resolveTask(task) {}
 }
 
 async function selectApp(appNames) {
@@ -95,7 +93,11 @@ function isTask(task, name, appName = null) {
   return def.type === 'basys' && def.name === name && (!appName || def.appName === appName);
 }
 
-function taskCommands(project, reporter) {
+function findTaskExecution(name, appName = null) {
+  return vscode.tasks.taskExecutions.filter(taskExec => isTask(taskExec.task, name, appName))[0];
+}
+
+function taskCommands(project, treeDataProvider, reporter) {
   return [
     vscode.commands.registerCommand('basys.start-dev-server', async appName => {
       reporter.sendTelemetryEvent('start-dev-server');
@@ -109,6 +111,7 @@ function taskCommands(project, reporter) {
           vscode.tasks.executeTask(
             tasks.filter(task => isTask(task, 'start-dev-server', appName))[0],
           );
+          treeDataProvider.refresh();
         });
       }
     }),
@@ -121,12 +124,8 @@ function taskCommands(project, reporter) {
       }
 
       if (appName) {
-        const task = vscode.tasks.taskExecutions.filter(taskExec =>
-          isTask(taskExec.task, 'start-dev-server', appName),
-        )[0];
-        if (task) {
-          task.terminate();
-        }
+        const taskExec = findTaskExecution('start-dev-server', appName);
+        if (taskExec) taskExec.terminate();
       }
     }),
 
@@ -203,19 +202,16 @@ class BasysTreeDataProvider {
   }
 
   getChildren(element) {
+    const spinnerIconPath = path.join(__dirname, '..', 'assets', 'spinner.svg');
     if (element) {
       if (element.id.startsWith('app-')) {
         // BUG: look at TreeItem.contextValue
-        // BUG: depends on the status of running tasks, icons
         const appName = element.id.substr(4);
         const children = [];
-
+        const taskExec = findTaskExecution('start-dev-server', appName);
         if (this.project.devServers[appName]) {
           // Allow to stop dev server if it was started from VSCode
-          const task = vscode.tasks.taskExecutions.filter(taskExec =>
-            isTask(taskExec.task, 'start-dev-server', appName),
-          )[0];
-          if (task) {
+          if (taskExec) {
             children.push({
               label: 'Stop dev server',
               command: {
@@ -239,6 +235,7 @@ class BasysTreeDataProvider {
               command: 'basys.start-dev-server',
               arguments: [appName],
             },
+            iconPath: taskExec ? spinnerIconPath : null,
           });
         }
 
