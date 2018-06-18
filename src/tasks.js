@@ -98,32 +98,25 @@ function findTaskExecution(name, appName = null) {
   return vscode.tasks.taskExecutions.filter(taskExec => isTask(taskExec.task, name, appName))[0];
 }
 
+async function executeTask(reporter, name, appName = null) {
+  reporter.sendTelemetryEvent(name);
+  const tasks = await vscode.tasks.fetchTasks();
+  return vscode.tasks.executeTask(tasks.filter(task => isTask(task, name, appName))[0]);
+}
+
 function taskCommands(project, treeDataProvider, reporter) {
   return [
     vscode.commands.registerCommand('basys.start-dev-server', async appName => {
-      reporter.sendTelemetryEvent('start-dev-server');
-
-      if (!appName) {
-        appName = await selectApp(project.appNames);
-      }
-
+      appName = appName || (await selectApp(project.appNames));
       if (appName) {
-        vscode.tasks.fetchTasks().then(tasks => {
-          vscode.tasks.executeTask(
-            tasks.filter(task => isTask(task, 'start-dev-server', appName))[0],
-          );
-          treeDataProvider.refresh();
-        });
+        await executeTask(reporter, 'start-dev-server', appName);
+        treeDataProvider.refresh();
       }
     }),
 
     vscode.commands.registerCommand('basys.stop-dev-server', async appName => {
       reporter.sendTelemetryEvent('stop-dev-server');
-
-      if (!appName) {
-        appName = await selectApp(project.appNames);
-      }
-
+      appName = appName || (await selectApp(project.appNames));
       if (appName) {
         const taskExec = findTaskExecution('start-dev-server', appName);
         if (taskExec) taskExec.terminate();
@@ -143,44 +136,19 @@ function taskCommands(project, treeDataProvider, reporter) {
     }),
 
     vscode.commands.registerCommand('basys.build', async appName => {
-      reporter.sendTelemetryEvent('build');
-
-      if (!appName) {
-        appName = await selectApp(project.appNames);
-      }
-
-      if (appName) {
-        vscode.commands.executeCommand(
-          'workbench.action.tasks.runTask',
-          `Basys: ${appName} app - build`,
-        );
-      }
-    }),
-
-    vscode.commands.registerCommand('basys.unit-test', () => {
-      reporter.sendTelemetryEvent('unit-test');
-      vscode.commands.executeCommand('workbench.action.tasks.runTask', 'Basys: Run unit tests');
+      appName = appName || (await selectApp(project.appNames));
+      console.log('build', appName);
+      if (appName) await executeTask(reporter, 'build', appName);
     }),
 
     vscode.commands.registerCommand('basys.e2e-test', async appName => {
-      reporter.sendTelemetryEvent('e2e-test');
-
-      if (!appName) {
-        appName = await selectApp(project.appNames);
-      }
-
-      if (appName) {
-        vscode.commands.executeCommand(
-          'workbench.action.tasks.runTask',
-          `Basys: ${appName} app - run end-to-end tests`,
-        );
-      }
+      appName = appName || (await selectApp(project.appNames));
+      if (appName) await executeTask(reporter, 'e2e-test', appName);
     }),
 
-    vscode.commands.registerCommand('basys.lint', () => {
-      reporter.sendTelemetryEvent('lint');
-      vscode.commands.executeCommand('workbench.action.tasks.runTask', 'Basys: Lint');
-    }),
+    vscode.commands.registerCommand('basys.unit-test', () => executeTask(reporter, 'unit-test')),
+
+    vscode.commands.registerCommand('basys.lint', () => executeTask(reporter, 'lint')),
   ];
 }
 
