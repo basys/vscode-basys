@@ -67,7 +67,9 @@ function validate(document) {
 }
 
 function validateAll() {
-  return Promise.all(documents.all().map(document => validate(document)));
+  for (const document of documents.all()) {
+    validate(document);
+  }
 }
 
 function updateStylelint() {

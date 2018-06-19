@@ -2,7 +2,7 @@
     "name": "vscode-basys",
     "displayName": "Basys",
     "description": "IDE for building full-stack Vue.js apps",
-    "version": "0.2.2",
+    "version": "0.2.3",
     "publisher": "basys",
     "engines": {
         "vscode": "^1.24.0"

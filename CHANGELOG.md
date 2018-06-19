@@ -1,3 +1,7 @@
+## 0.2.3
+
+* Use the new Tasks API to improve the explorer view for running Basys commands
+
 ## 0.2.2 (1 June 2018)
 
 * Logo update
